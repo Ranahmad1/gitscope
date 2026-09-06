@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitscope"
+version = "1.0.0"
+description = "Git Repository Security Hygiene Auditor — scan local repos for secrets, misconfigurations, and hygiene issues"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "ranahmad1", email = "ahmadaslam0904@gmail.com" }]
+keywords = [
+    "security", "git", "secrets", "devops", "cybersecurity",
+    "appsec", "devsecops", "audit", "cli", "credentials",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov"]
+
+[project.scripts]
+gitscope = "gitscope.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Ranahmad1/gitscope"
+Repository = "https://github.com/Ranahmad1/gitscope"
+"Bug Tracker" = "https://github.com/Ranahmad1/gitscope/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gitscope*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["gitscope"]
+omit = ["tests/*"]
