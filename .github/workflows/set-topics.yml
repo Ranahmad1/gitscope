@@ -1,0 +1,16 @@
+name: Set Repository Topics
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-topics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set topics via GitHub API
+        run: |
+          curl -X PUT \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/Ranahmad1/gitscope/topics \
+            -d '{"names":["security","git","python","cli","secrets-scanner","devsecops","appsec","developer-tools","cybersecurity","security-audit"]}'
