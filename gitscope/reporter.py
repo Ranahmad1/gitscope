@@ -107,6 +107,11 @@ def _section_header(title: str, use_color: bool) -> str:
     return f"\n{bold}{line}{reset}\n{bold}  {title}{reset}\n{bold}{line}{reset}"
 
 
+def _utc_timestamp() -> str:
+    """Current UTC time as a valid ISO 8601 string ending in 'Z'."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
 # ---------------------------------------------------------------------------
 # Terminal reporter
 # ---------------------------------------------------------------------------
@@ -222,7 +227,7 @@ def render_json(result: ScanResult, stream: TextIO = sys.stdout, pretty: bool = 
     """Render machine-readable JSON output."""
     data = {
         "gitscope_version": "1.0.0",
-        "scan_timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        "scan_timestamp": _utc_timestamp(),
         "repository": result.repo_path,
         "summary": {
             "files_scanned": result.files_scanned,
