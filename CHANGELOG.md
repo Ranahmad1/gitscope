@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **SARIF 2.1.0 output** via `--sarif` for GitHub Code Scanning and other SARIF tools
+  - One rule per finding type, `security-severity` scores so alerts bucket correctly in the Security tab
+  - Stable `partialFingerprints` so alerts de-duplicate across runs
+  - Scan warnings/errors reported as tool execution notifications
+  - Example: `gitscope --sarif --output gitscope.sarif`
+- 14 new tests in `tests/test_sarif.py`
+
+---
+
 ## [1.0.0] — 2026-09-06
 
 ### Added
@@ -74,7 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-commit hook installer (`gitscope install-hook`)
 - `.gitscope.toml` configuration file for custom patterns and ignores
 - Allowlist comments (`# gitscope: ignore`) for false-positive suppression
-- SARIF output format for GitHub Code Scanning
 
 ### [1.2.0] — Planned
 
