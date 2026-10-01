@@ -44,6 +44,7 @@ Most secret scanning tools — [truffleHog](https://github.com/trufflesecurity/t
 | .gitignore hygiene audit | ✅ | ❌ | ❌ | ❌ |
 | Security score + grade | ✅ | ❌ | ❌ | ❌ |
 | JSON output for CI/CD | ✅ | ✅ | ✅ | ✅ |
+| SARIF output (GitHub Code Scanning) | ✅ | ✅ | ✅ | ❌ |
 | Remediation guidance | ✅ | ❌ | ❌ | ❌ |
 | `pip install` only | ✅ | ❌ | ❌ | ✅ |
 
@@ -59,7 +60,8 @@ Most secret scanning tools — [truffleHog](https://github.com/trufflesecurity/t
 - **.gitignore Hygiene Audit** — Checks your `.gitignore` for missing rules that protect common sensitive patterns
 - **Git Config Checks** — Detects credentials embedded in remote URLs or plaintext credential storage
 - **Security Score** — Produces a 0–100 score with letter grade (A–F) based on severity-weighted findings
-- **CI/CD Integration** — JSON output mode and configurable exit codes for pipeline integration
+- **CI/CD Integration** — JSON and SARIF output modes and configurable exit codes for pipeline integration
+- **GitHub Code Scanning** — SARIF 2.1.0 output shows findings directly in your repository's Security tab
 - **Remediation Guidance** — Every finding includes specific, actionable fix instructions
 
 ---
@@ -105,6 +107,9 @@ gitscope --no-history
 # JSON output for CI/CD or tooling
 gitscope --json
 
+# SARIF output for GitHub Code Scanning
+gitscope --sarif --output gitscope.sarif
+
 # Only show high/critical findings
 gitscope --min-severity high
 
@@ -125,6 +130,7 @@ positional arguments:
 options:
   --version             Show version and exit
   --json                Output results as JSON
+  --sarif               Output results as SARIF 2.1.0 (GitHub Code Scanning)
   --plain               Output plain text (no ANSI colors)
   --no-color            Disable ANSI colors in terminal output
   --no-history          Skip git commit history scan
@@ -136,6 +142,8 @@ options:
                         Values: low | medium | high | critical | never
   -h, --help            Show help message
 ```
+
+`--json`, `--sarif`, and `--plain` are mutually exclusive.
 
 ### Exit Codes
 
@@ -235,6 +243,56 @@ jobs:
           path: gitscope-report.json
 ```
 
+### GitHub Code Scanning (SARIF)
+
+Upload gitscope findings to the repository's **Security → Code scanning** tab:
+
+```yaml
+# .github/workflows/gitscope-code-scanning.yml
+name: gitscope Code Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gitscope:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install gitscope
+        run: pip install gitscope
+
+      # --fail-on never so the SARIF upload still happens when findings exist
+      - name: Run gitscope
+        run: gitscope --sarif --output gitscope.sarif --fail-on never
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gitscope.sarif
+          category: gitscope
+```
+
+Notes on the SARIF output:
+
+- Severity maps to SARIF levels: critical/high → `error`, medium → `warning`, low → `note`. `security-severity` scores let GitHub bucket alerts as Critical / High / Medium / Low.
+- Findings that are not tied to a file (for example some git config findings) are reported against the repository root, because GitHub requires every result to have a location.
+- Stable fingerprints keep alerts from being duplicated between runs.
+
 ### GitLab CI
 
 ```yaml
@@ -316,11 +374,13 @@ gitscope/
 │   ├── patterns.py      All detection patterns (secrets, files, gitignore rules)
 │   ├── scanner.py       Core scanning engine (4 scan stages)
 │   ├── reporter.py      Output formatters (terminal, JSON, plain)
+│   ├── sarif.py         SARIF 2.1.0 formatter (GitHub Code Scanning)
 │   └── cli.py           Argument parsing and CLI entry point
 └── tests/
     ├── test_patterns.py Pattern unit tests
     ├── test_scanner.py  Scanner integration tests (real temp git repos)
     ├── test_reporter.py Reporter output tests
+    ├── test_sarif.py    SARIF output tests
     └── test_cli.py      CLI behavior tests
 ```
 
@@ -353,7 +413,7 @@ git clone https://github.com/Ranahmad1/gitscope.git
 cd gitscope
 pip install -e ".[dev]"
 
-python -m pytest                                             # all 103 tests
+python -m pytest                                             # full test suite
 python -m pytest --cov=gitscope --cov-report=term-missing   # with coverage
 python -m pytest tests/test_patterns.py -v                  # pattern tests only
 ```
@@ -367,7 +427,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding new patterns or 
 - [ ] Pre-commit hook installer (`gitscope install-hook`)
 - [ ] `.gitscope.toml` configuration file (custom patterns, ignores)
 - [ ] Allowlist comments (`# gitscope: ignore`) for false-positive suppression
-- [ ] SARIF output for GitHub Code Scanning
+- [x] SARIF output for GitHub Code Scanning
 - [ ] HTML report output
 - [ ] Glob-based file exclusions (`--exclude-path`)
 
