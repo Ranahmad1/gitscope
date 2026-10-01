@@ -16,6 +16,7 @@ import sys
 from gitscope import __version__
 from gitscope.scanner import run_full_scan, DEFAULT_COMMIT_DEPTH
 from gitscope.reporter import render_terminal, render_json, render_plain
+from gitscope.sarif import render_sarif
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,6 +32,7 @@ Examples:
   gitscope                          Scan current directory
   gitscope /path/to/repo            Scan a specific repository
   gitscope --json                   Output JSON report
+  gitscope --sarif --output gitscope.sarif   Output SARIF for GitHub Code Scanning
   gitscope --no-history             Skip git commit history scan
   gitscope --depth 100              Scan last 100 commits
   gitscope --min-severity high      Only report high/critical findings
@@ -64,6 +66,11 @@ Author: ranahmad1 <https://github.com/Ranahmad1>
         "--json",
         action="store_true",
         help="Output results as JSON (useful for CI/CD and tooling integration)",
+    )
+    output_group.add_argument(
+        "--sarif",
+        action="store_true",
+        help="Output results as SARIF 2.1.0 (for GitHub Code Scanning and other SARIF tools)",
     )
     output_group.add_argument(
         "--plain",
@@ -210,6 +217,8 @@ def main(argv=None) -> int:
     try:
         if args.json:
             render_json(result, stream=output_stream)
+        elif args.sarif:
+            render_sarif(result, stream=output_stream)
         elif args.plain:
             render_plain(result, stream=output_stream)
         else:
